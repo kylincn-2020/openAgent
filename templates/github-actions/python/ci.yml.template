@@ -1,0 +1,39 @@
+# Python CI 工作流
+# 自动运行测试和构建，确保代码质量
+
+name: {ci_name}
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 设置 Python 环境，启用 pip 缓存
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "{python_version}"
+          cache: "pip"
+          cache-dependency-path: "{cache_dependency_path}"
+
+      # 安装依赖
+      - name: Install dependencies
+        run: |
+          {install_command}
+
+      # 运行测试
+      - name: Run tests
+        run: |
+          {test_command}
+
+      {build_step}

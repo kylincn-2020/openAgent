@@ -1,0 +1,41 @@
+# Go CI 工作流
+# 自动运行测试和构建，确保代码质量
+
+name: {ci_name}
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 设置 Go 环境，启用 Go 模块缓存
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "{go_version}"
+          cache: true
+
+      # 下载依赖
+      - name: Download dependencies
+        run: |
+          {install_command}
+
+      # 运行测试
+      - name: Run tests
+        run: |
+          {test_command}
+
+      # 构建项目
+      - name: Build
+        run: |
+          {build_command}

@@ -1,3 +1,47 @@
+Metadata-Version: 2.4
+Name: devops-agent
+Version: 1.0.0
+Summary: 让 DevOps 像对话一样简单 - 对话驱动的 DevOps 自动化 CLI 工具
+Author: DevOps Agent Team
+License: MIT
+Project-URL: Homepage, https://github.com/your-org/devops-agent
+Project-URL: Documentation, https://github.com/your-org/devops-agent/blob/main/docs/ARCHITECTURE.md
+Project-URL: Repository, https://github.com/your-org/devops-agent
+Project-URL: Issues, https://github.com/your-org/devops-agent/issues
+Project-URL: Changelog, https://github.com/your-org/devops-agent/blob/main/CHANGELOG.md
+Keywords: devops,ci-cd,github-actions,agent,cli,automation
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: typer[all]>=0.12
+Requires-Dist: rich>=13.7
+Requires-Dist: langgraph>=0.2
+Requires-Dist: litellm>=1.40
+Requires-Dist: fastapi>=0.110
+Requires-Dist: pydantic>=2.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: httpx>=0.27
+Requires-Dist: uvicorn>=0.28
+Requires-Dist: tenacity>=9.0
+Requires-Dist: loguru>=0.7
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: isort>=5.12; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+
 # DevOps Agent
 
 **让 DevOps 像对话一样简单**
@@ -125,7 +169,7 @@ export DEVOPS_AGENT_CONFIG=/path/to/config.yaml
 
 ```yaml
 llm:
-  provider: claude  # 或 openai, custom
+  provider: claude  # 或 openai
   api_key: your_api_key
   model: claude-3-5-sonnet-20241022
   timeout: 30
@@ -138,25 +182,6 @@ output:
   format: yaml  # 或 json
   indent: 2
 ```
-
-### Custom LLM API Support
-
-DevOps Agent supports any OpenAI-compatible LLM endpoint. To use a custom endpoint:
-
-1. Set `provider: custom` in your config.yaml
-2. Add your endpoint URL as `base_url`
-3. Provide the API key for your custom endpoint
-
-Example:
-```yaml
-llm:
-  provider: custom
-  api_key: your-custom-endpoint-key
-  model: your-model-name
-  base_url: https://your-endpoint.com/v1
-```
-
-**Note:** Your endpoint must be compatible with the OpenAI API format. The framework will automatically pass the `api_base` parameter to LiteLLM, and all standard features (retry, timeout, streaming) will work with custom endpoints.
 
 ## 生成的配置示例
 

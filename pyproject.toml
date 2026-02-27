@@ -1,0 +1,81 @@
+[project]
+name = "devops-agent"
+version = "1.0.0"
+description = "让 DevOps 像对话一样简单 - 对话驱动的 DevOps 自动化 CLI 工具"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "DevOps Agent Team"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["devops", "ci-cd", "github-actions", "agent", "cli", "automation"]
+
+dependencies = [
+    "typer[all]>=0.12",
+    "rich>=13.7",
+    "langgraph>=0.2",
+    "litellm>=1.40",
+    "fastapi>=0.110",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "httpx>=0.27",
+    "uvicorn>=0.28",
+    "tenacity>=9.0",
+    "loguru>=0.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/devops-agent"
+Documentation = "https://github.com/your-org/devops-agent/blob/main/docs/ARCHITECTURE.md"
+Repository = "https://github.com/your-org/devops-agent"
+Issues = "https://github.com/your-org/devops-agent/issues"
+Changelog = "https://github.com/your-org/devops-agent/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "pytest-cov>=4.0",
+    "ruff>=0.1",
+    "black>=23.0",
+    "isort>=5.12",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+devops-agent = "devops_agent.cli:app"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
