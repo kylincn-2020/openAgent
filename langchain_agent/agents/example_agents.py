@@ -30,17 +30,7 @@ class WeatherAgent(BaseSubAgent):
     async def execute(
         self, input_data: Any, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        执行天气查询
-
-        Args:
-            input_data: 用户输入
-            context: 上下文信息
-
-        Returns:
-            天气信息
-        """
-        # 模拟天气查询（实际应用中应该调用天气 API）
+        """执行天气查询"""
         await asyncio.sleep(0.5)
 
         # 简单的关键词匹配
@@ -90,16 +80,7 @@ class TimeAgent(BaseSubAgent):
     async def execute(
         self, input_data: Any, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        执行时间查询
-
-        Args:
-            input_data: 用户输入
-            context: 上下文信息
-
-        Returns:
-            时间信息
-        """
+        """执行时间查询"""
         await asyncio.sleep(0.3)
 
         now = datetime.now()
@@ -128,29 +109,19 @@ class CalculationAgent(BaseSubAgent):
     async def execute(
         self, input_data: Any, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        执行计算
-
-        Args:
-            input_data: 用户输入
-            context: 上下文信息
-
-        Returns:
-            计算结果
-        """
+        """执行计算"""
         await asyncio.sleep(0.4)
 
         input_str = str(input_data)
 
         # 简单的数学表达式解析
-        try:
-            # 提取数字和运算符
-            import re
+        import re
 
-            numbers = re.findall(r"\d+\.?\d*", input_str)
-            operators = re.findall(r"[+\-*/]", input_str)
+        numbers = re.findall(r"\d+\.?\d*", input_str)
+        operators = re.findall(r"[+\-*/]", input_str)
 
-            if len(numbers) >= 2 and operators:
+        if len(numbers) >= 2 and operators:
+            try:
                 # 执行计算
                 num1 = float(numbers[0])
                 num2 = float(numbers[1])
@@ -164,22 +135,16 @@ class CalculationAgent(BaseSubAgent):
                     result = num1 * num2
                 elif op == "/":
                     result = num1 / num2 if num2 != 0 else "除数不能为0"
-                else:
-                    result = "不支持的运算符"
 
                 return {
                     "expression": f"{num1} {op} {num2}",
                     "result": result,
                     "success": True,
                 }
-            else:
-                return {
-                    "error": "无法识别的表达式",
-                    "input": input_str,
-                    "success": False,
-                }
-        except Exception as e:
-            return {"error": str(e), "success": False}
+            except Exception as e:
+                return {"error": str(e), "success": False}
+        else:
+            return {"error": "无法识别的表达式", "input": input_str, "success": False}
 
 
 @register_agent(
@@ -198,16 +163,7 @@ class NewsAgent(BaseSubAgent):
     async def execute(
         self, input_data: Any, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        执行新闻查询
-
-        Args:
-            input_data: 用户输入
-            context: 上下文信息
-
-        Returns:
-            新闻信息
-        """
+        """执行新闻查询"""
         await asyncio.sleep(0.5)
 
         # 模拟新闻数据（实际应用中应该调用新闻 API）
@@ -249,16 +205,7 @@ class TranslationAgent(BaseSubAgent):
     async def execute(
         self, input_data: Any, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        执行翻译
-
-        Args:
-            input_data: 用户输入
-            context: 上下文信息
-
-        Returns:
-            翻译结果
-        """
+        """执行翻译"""
         await asyncio.sleep(0.6)
 
         input_str = str(input_data)

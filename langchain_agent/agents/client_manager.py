@@ -6,9 +6,11 @@ Client 管理
 import os
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 from ..cache.client_cache import get_global_cache
 from .intent_agent import IntentRecognitionAgent
+
 
 # 加载环境变量
 load_dotenv()
@@ -54,19 +56,31 @@ class AgentClient:
 
         Args:
             user_input: 用户输入
-            input_data: 传递给 Agent 的输入数据
+            input_data: 传递给 Agent 的输入数据（默认为 user_input）
             context: 上下文信息
 
         Returns:
             处理结果
         """
-        return await self.intent_agent.process(user_input, input_data, context)
+        # 如果没有指定 input_data，使用 user_input
+        if input_data is None:
+            input_data = user_input
+
+        # 意图识别
+        intent_result = await self.intent_agent.recognize_intent(user_input, context)
+
+        # 执行 Agent
+        execution_results = await self.intent_agent.execute_agents(
+            intent_result, input_data, context
+        )
+
+        return execution_results
 
 
 class ClientManager:
     """
     Client 管理器
-    管理多个用户和入口的 Client 实例
+    管理 Client 的创建和缓存
     """
 
     def __init__(self):

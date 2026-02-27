@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
 
 from .agent_registry import get_global_registry
 
@@ -236,7 +237,10 @@ class IntentRecognitionAgent:
             return (agent_name, {"error": str(e)})
 
     async def process(
-        self, user_input: str, input_data: Any = None, context: Optional[Dict] = None
+        self,
+        user_input: str,
+        input_data: Any = None,
+        context: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """
         完整的处理流程：意图识别 + Agent 执行

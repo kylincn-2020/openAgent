@@ -2,11 +2,10 @@
 子 Agent 注册装饰器
 提供快速注册子 Agent 的装饰器
 """
-from asyncio import Lock
-from typing import Any, Callable, Dict, List, Optional, Type
-from functools import wraps
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Type
 
 
 @dataclass
@@ -81,7 +80,7 @@ class AgentRegistry:
             @registry.register(AgentMetadata(
                 name="weather_agent",
                 description="查询天气信息",
-                intent_keywords=["天气", "气温", "下雨"],
+                intent_keywords=["天气", "气温"],
                 priority=10
             ))
             class WeatherAgent(BaseSubAgent):
@@ -221,7 +220,6 @@ class AgentRegistry:
 
 # 全局注册表实例
 _global_registry: Optional[AgentRegistry] = None
-_registry_lock = None
 
 
 def get_global_registry() -> AgentRegistry:
@@ -231,16 +229,12 @@ def get_global_registry() -> AgentRegistry:
     Returns:
         AgentRegistry 实例
     """
-    global _global_registry, _registry_lock
+    global _global_registry
 
-    if _registry_lock is None:
-        _registry_lock = Lock()
+    if _global_registry is None:
+        _global_registry = AgentRegistry()
 
-    with _registry_lock:
-        if _global_registry is None:
-            _global_registry = AgentRegistry()
-
-        return _global_registry
+    return _global_registry
 
 
 def register_agent(metadata: AgentMetadata) -> Callable:
@@ -264,5 +258,6 @@ def register_agent(metadata: AgentMetadata) -> Callable:
             async def execute(self, input_data, context):
                 return {"weather": "晴"}
     """
+    # 获取全局注册表
     registry = get_global_registry()
     return registry.register(metadata)
