@@ -5,14 +5,16 @@
 
 import asyncio
 import sys
+from pathlib import Path
+
+# 添加父目录到 Python 路径
+current_dir = Path(__file__).parent
+parent_dir = current_dir.parent.parent
+sys.path.insert(0, str(parent_dir))
+
+# 在模块级别导入所有示例子 Agent（会自动注册）
+from langchain_agent.agents.example_agents import *
 from langchain_agent.agents.client_manager import get_client_manager
-from langchain_agent.agents.example_agents import (
-    WeatherAgent,
-    TimeAgent,
-    CalculationAgent,
-    NewsAgent,
-    TranslationAgent,
-)
 
 
 async def example_basic_usage():
@@ -144,9 +146,6 @@ async def main():
     print("=" * 50)
 
     try:
-        # 导入示例子 Agent（会自动注册）
-        from langchain_agent.agents.example_agents import *
-
         # 运行示例
         await example_basic_usage()
         await example_parallel_execution()
