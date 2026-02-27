@@ -43,13 +43,23 @@ class AgentClient:
         self.model_name = model_name or os.getenv("DEFAULT_MODEL", "gpt-4o-mini")
         self.temperature = temperature
 
+        # 检查是否有 API Key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            print("警告: 未设置 OPENAI_API_KEY 环境变量")
+            print("请创建 .env 文件并设置 API Key，或在初始化时传入 api_key")
+
         # 初始化意图识别 Agent
         self.intent_agent = IntentRecognitionAgent(
-            model_name=self.model_name, temperature=self.temperature
+            model_name=self.model_name,
+            temperature=self.temperature,
         )
 
     async def process(
-        self, user_input: str, input_data: Any = None, context: Optional[Dict] = None
+        self,
+        user_input: str,
+        input_data: Any = None,
+        context: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """
         处理用户请求
@@ -106,7 +116,7 @@ class ClientManager:
         Returns:
             AgentClient 实例
         """
-        # 尝试从缓存获取
+        # 获取或创建 Client
         client = self.cache.get(user_id, entry_point)
 
         if client is None:
