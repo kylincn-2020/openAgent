@@ -1,10 +1,9 @@
 """
-意图识别 Agent（基于 LangChain）
+意图识别 Agent（基于智谱 GLM-4.7 + LangChain OpenAI 兼容协议）
 负责识别用户意图并路由到相应的子 Agent
 """
 
 import asyncio
-import json
 from typing import Any, Dict, List, Optional
 
 from langchain_openai import ChatOpenAI
@@ -28,22 +27,45 @@ class IntentRecognitionResult(BaseModel):
 class IntentRecognitionAgent:
     """
     意图识别 Agent
-    使用 LangChain v1.0+ API 进行意图识别和路由
+    使用智谱 GLM-4.7 和 LangChain OpenAI 兼容协议进行意图识别和路由
     """
 
     def __init__(
-        self, model_name: str = "gpt-4o-mini", temperature: float = 0.0, registry=None
+        self,
+        model_name: str = "glm-4-plus",
+        temperature: float = 0.0,
+        registry=None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
     ):
         """
         初始化意图识别 Agent
 
         Args:
-            model_name: 使用的模型名称
+            model_name: 使用的模型名称（智谱支持的模型：glm-4-flash, glm-4-plus, glm-4-air, glm-4-airx）
             temperature: 温度参数
             registry: Agent 注册表，默认使用全局注册表
+            api_key: 智谱 API Key（可选，如果不提供则从环境变量读取）
+            base_url: API 基础 URL（可选，默认使用智谱 OpenAI 兼容端点）
         """
-        self.llm = ChatOpenAI(model=model_name, temperature=temperature)
+        self.model_name = model_name
+        self.temperature = temperature
         self.registry = registry or get_global_registry()
+
+        # 智谱 OpenAI 兼容 API 配置
+        self.base_url = base_url or "https://open.bigmodel.cn/api/paas/v4/"
+        self.api_key = api_key
+
+        # 初始化 LangChain ChatOpenAI（使用智谱的 OpenAI 兼容端点）
+        self.llm = ChatOpenAI(
+            model=self.model_name,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            temperature=self.temperature,
+        )
+
+        # 使用 with_structured_output 进行结构化输出
+        self.structured_llm = self.llm.with_structured_output(IntentRecognitionResult)
 
     def _build_system_prompt(self) -> str:
         """
@@ -98,34 +120,99 @@ class IntentRecognitionAgent:
         Returns:
             意图识别结果
         """
-        # 使用 with_structured_output 创建结构化输出模型
-        structured_llm = self.llm.with_structured_output(IntentRecognitionResult)
+        try:
+            # 构建消息
+            messages = [("system", self._build_system_prompt()), ("user", user_input)]
 
-        # 构建消息
-        messages = [
-            ("system", self._build_system_prompt()),
+            # 使用 LangChain 的结构化输出进行意图识别
+            result = await self.structured_llm.ainvoke(messages)
+
+            return result
+
+        except Exception as e:
+            # 如果智谱 API 调用失败，使用关键词匹配作为备选方案
+            return self._fallback_intent_recognition(user_input, context, str(e))
+
+    def _fallback_intent_recognition(
+        self, user_input: str, context: Optional[Dict], error: str
+    ) -> IntentRecognitionResult:
+        """
+        备选的意图识别方案（关键词匹配）
+
+        Args:
+            user_input: 用户输入
+            context: 上下文信息
+            error: 原始错误信息
+
+        Returns:
+            意图识别结果
+        """
+        # 简单的关键词匹配
+        user_text = (user_input + " " + str(context or "")).lower()
+        words = user_text.split()
+
+        # 获取所有 Agent 元数据
+        agents_metadata = self.registry.get_all_metadata()
+
+        # 匹配关键词
+        matched = self._match_agents_by_keywords(words, agents_metadata)
+
+        # 确定主要意图
+        primary_intent = matched[0].name if matched else "unknown"
+
+        # 确定次要意图（并行任务）
+        secondary_intents = [
+            agent.name for agent in matched[1:3] if agent.name != primary_intent
         ]
 
-        # 构建用户消息
-        user_message = user_input
-        if context:
-            context_str = json.dumps(context, ensure_ascii=False)
-            user_message = f"{user_input}\n\n上下文: {context_str}"
+        # 置信度
+        confidence = 0.8 if len(matched) > 0 else 0.3
 
-        messages.append(("human", user_message))
+        reasoning = f"基于关键词匹配，识别到 {len(matched)} 个相关 Agent：{', '.join([a.name for a in matched])}。API 调用失败，使用备选方案。"
 
-        try:
-            # 调用 LLM
-            result = await structured_llm.ainvoke(messages)
-            return result
-        except Exception as e:
-            # 如果解析失败，返回默认结果
-            return IntentRecognitionResult(
-                primary_intent="unknown",
-                secondary_intents=[],
-                confidence=0.0,
-                reasoning=f"识别失败: {str(e)}",
-            )
+        return IntentRecognitionResult(
+            primary_intent=primary_intent,
+            secondary_intents=secondary_intents,
+            confidence=confidence,
+            reasoning=reasoning,
+        )
+
+    def _match_agents_by_keywords(
+        self, keywords: List[str], agents_metadata: List
+    ) -> List:
+        """
+        根据关键词匹配相关的 Agent
+
+        Args:
+            keywords: 用户输入的关键词列表
+            agents_metadata: 所有 Agent 元数据
+
+        Returns:
+            匹配的 Agent 列表
+        """
+        matched = []
+        used_keywords = set()
+
+        # 统一关键词（小写、去除空格）
+        for kw in keywords:
+            if kw.strip():
+                used_keywords.add(kw.lower())
+
+        # 为每个 Agent 匹配关键词
+        for metadata in agents_metadata:
+            score = 0
+            for kw in metadata.intent_keywords:
+                if kw.lower() in used_keywords:
+                    score += 1
+
+            if score > 0:
+                matched.append((metadata, score))
+
+        # 按分数和优先级降序排列
+        matched.sort(key=lambda x: (x[1], x[0].priority), reverse=True)
+
+        # 返回按优先级排序的 Agent 列表
+        return [metadata for metadata, score in matched]
 
     async def execute_agents(
         self,
@@ -155,7 +242,7 @@ class IntentRecognitionAgent:
 
         if not agents_to_execute:
             return {
-                "error": "No valid agents found for the intent",
+                "error": "No valid agents found for intent",
                 "intent": intent_result.model_dump(),
             }
 
@@ -186,6 +273,8 @@ class IntentRecognitionAgent:
 
             # 并行执行
             if secondary_tasks:
+                import copy
+
                 secondary_results = await asyncio.gather(
                     *secondary_tasks, return_exceptions=True
                 )

@@ -2,7 +2,18 @@
 
 基于 LangChain v1.0+ 的智能意图识别 Agent 系统，支持多子 Agent 并行执行和结果汇总。
 
+**🎉 新增支持智谱 GLM-4.7！** - 使用 OpenAI 兼容协议，轻松切换不同大语言模型。
+
+基于 LangChain v1.0+ 的智能意图识别 Agent 系统，支持多子 Agent 并行执行和结果汇总。
+
 ## 功能特性
+
+1. **意图识别**: 使用 LangChain v1.0+ 最新 API 自动识别用户意图
+2. **并行执行**: 支持多个子 Agent 并行处理独立任务
+3. **结果汇总**: 自动汇总所有 Agent 的执行结果
+4. **装饰器注册**: 提供便捷的装饰器快速注册子 Agent
+5. **Client 缓存**: 按用户+入口维度缓存 Client，30分钟自动过期
+6. **多模型支持**: 支持 OpenAI 和智谱 GLM-4.7（OpenAI 兼容协议）
 
 1. **意图识别**: 使用 LangChain v1.0+ 最新 API 自动识别用户意图
 2. **并行执行**: 支持多个子 Agent 并行处理独立任务
@@ -19,21 +30,21 @@
 
 - 详见 [API_UPDATE.md](./API_UPDATE.md) 文档。
 
-基于 LangChain 的智能意图识别 Agent 系统，支持多子 Agent 并行执行和结果汇总。
-n
-**本系统已更新为使用 LangChain v1.0+ 最新 API**
-- 使用 `with_structured_output()` 替代 `PydanticOutputParser`
-- 更新导入路径为 `langchain_core.prompts`
-- 详见 [API_UPDATE.md](./API_UPDATE.md) 文档
 
 
-## 功能特性
 
-1. **意图识别**: 使用 LangChain 自动识别用户意图
-2. **并行执行**: 支持多个子 Agent 并行处理独立任务
-3. **结果汇总**: 自动汇总所有 Agent 的执行结果
-4. **装饰器注册**: 提供便捷的装饰器快速注册子 Agent
-5. **Client 缓存**: 按用户+入口维度缓存 Client，30分钟自动过期
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 项目结构
 
@@ -51,12 +62,94 @@ langchain_agent/
 ├── examples/
 │   ├── quick_start.py         # 快速开始示例
 │   ├── usage_example.py       # 完整使用示例
+│   ├── custom_agent.py        # 自定义 Agent 示例
+│   └── zhipu_example.py      # 智谱 GLM-4.7 使用示例
+├── requirements.txt           # 依赖包
+├── .env.example              # 环境变量示例
+├── README.md                 # 本文件
+├── API_UPDATE.md             # LangChain v1.0+ API 更新文档
+└── UPDATE_SUMMARY.md         # 更新总结
+│   ├── quick_start.py         # 快速开始示例
+│   ├── usage_example.py       # 完整使用示例
 │   └── custom_agent.py        # 自定义 Agent 示例
 ├── requirements.txt           # 依赖包
 ├── .env.example              # 环境变量示例
 └── README.md                 # 本文件
 ```
 
+## 快速开始
+
+### 方式 1: 使用 OpenAI GPT 模型
+
+#### 1. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. 配置环境变量
+
+复制 `.env.example` 为 `.env` 并填入你的 OpenAI API Key：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件：
+
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_BASE_URL=https://api.openai.com/v1
+DEFAULT_MODEL=gpt-4o-mini
+```
+
+#### 3. 运行快速开始示例
+
+```bash
+python examples/quick_start.py
+```
+
+### 方式 2: 使用智谱 GLM-4.7（推荐国内用户）
+
+#### 1. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. 获取智谱 API Key
+
+访问 [智谱 AI 开放平台](https://open.bigmodel.cn/usercenter/apikeys) 获取 API Key。
+
+#### 3. 配置环境变量
+
+编辑 `.env` 文件：
+
+```env
+ZHIPU_API_KEY=your_zhipu_api_key_here
+ZHIPU_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
+DEFAULT_MODEL=glm-4-plus
+```
+
+#### 4. 运行智谱示例
+
+```bash
+python examples/zhipu_example.py
+```
+
+## 支持的模型
+
+### OpenAI
+- `gpt-4o` - 最新旗舰模型
+- `gpt-4o-mini` - 轻量版，性价比高
+- `gpt-4-turbo` - GPT-4 Turbo
+- `gpt-3.5-turbo` - 经典模型
+
+### 智谱 GLM
+- `glm-4-plus` - 最强性能，适合复杂任务
+- `glm-4-flash` - 最快速度，适合简单任务
+- `glm-4-air` - 平衡性能和速度
+- `glm-4-airx` - 增强版平衡模型
 ## 快速开始
 
 ### 1. 安装依赖
@@ -86,7 +179,67 @@ DEFAULT_MODEL=gpt-4o-mini
 python examples/quick_start.py
 ```
 
+
 ## 核心使用方式
+
+### 使用智谱 GLM-4.7
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+
+from langchain_agent.agents.example_agents import WeatherAgent, TimeAgent
+from langchain_agent.agents.intent_agent import IntentRecognitionAgent
+
+async def main():
+    load_dotenv()
+
+    # 初始化意图识别 Agent（使用智谱 GLM-4.7）
+    agent = IntentRecognitionAgent(
+        model_name="glm-4-plus",  # 或其他 GLM 模型
+        api_key=os.getenv("ZHIPU_API_KEY"),
+        base_url=os.getenv("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4/"),
+        temperature=0.0
+    )
+
+    # 处理用户请求
+    result = await agent.process("北京今天的天气怎么样？")
+    print(result)
+
+asyncio.run(main())
+```
+
+### 使用 Client 管理器（推荐）
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+
+from langchain_agent.agents.client_manager import get_client_manager
+
+async def main():
+    load_dotenv()
+
+    # 获取 Client 管理器
+    client_manager = get_client_manager()
+
+    # 获取或创建 Client（会自动缓存）
+    client = client_manager.get_client(
+        user_id="user_001",
+        entry_point="web_chat",
+        model_name="glm-4-plus",  # 或 "gpt-4o-mini"
+        api_key=os.getenv("ZHIPU_API_KEY"),
+        base_url=os.getenv("ZHIPU_BASE_URL")
+    )
+
+    # 处理用户请求
+    result = await client.process("现在几点了？")
+    print(result)
+
+asyncio.run(main())
+```
 
 ### 基础使用
 
@@ -227,7 +380,17 @@ python examples/quick_start.py
 ```bash
 python examples/usage_example.py
 ```
+### 示例 3: 智谱 GLM-4.7 使用
 
+```bash
+python examples/zhipu_example.py
+```
+
+### 示例 4: 自定义 Agent
+
+```bash
+python examples/custom_agent.py
+```
 ### 示例 3: 自定义 Agent
 
 ```bash
@@ -259,14 +422,66 @@ python examples/custom_agent.py
 
 ## 注意事项
 
-1. 确保 `.env` 文件中配置了正确的 OpenAI API Key
+## 注意事项
+
+1. **API Key**: 确保 `.env` 文件中配置了正确的 API Key（OpenAI 或智谱）
+2. **异步执行**: 子 Agent 的 `execute` 方法必须是异步的
+3. **关键词设置**: 意图关键词要尽量具体，避免误识别
+4. **并行条件**: 不同 Agent 处理的任务必须完全独立才能并行执行
+
+## 常见问题
+
+### Q: 如何切换 OpenAI 和智谱？
+
+A: 修改 `.env` 文件中的配置：
+
+```env
+# 使用 OpenAI
+OPENAI_API_KEY=your_openai_key
+DEFAULT_MODEL=gpt-4o-mini
+
+# 使用智谱
+ZHIPU_API_KEY=your_zhipu_key
+DEFAULT_MODEL=glm-4-plus
+```
+
+### Q: 智谱模型哪个最适合？
+
+A: 根据需求选择：
+- **glm-4-plus**: 最强性能，适合复杂任务
+- **glm-4-flash**: 最快速度，适合简单任务
+- **glm-4-air**: 平衡性能和速度
+- **glm-4-airx**: 增强版平衡模型
+
+### Q: 意图识别不准确怎么办？
+
+A: 1. 检查 `intent_keywords` 是否准确
+2. 增加 Agent 的 `priority` 优先级
+3. 调整 `temperature` 参数（0.0 更精确）
 2. 子 Agent 的 `execute` 方法必须是异步的
 3. 意图关键词要尽量具体，避免误识别
 4. 不同 Agent 处理的任务必须完全独立才能并行执行
 
 ## 扩展建议
 
+## 扩展建议
+
 1. **添加更多子 Agent**: 使用装饰器轻松添加新功能
+2. **集成更多 LLM**: 支持其他大语言模型（如文心、通义等）
+3. **持久化存储**: 将对话历史和结果保存到数据库
+4. **监控和日志**: 添加详细的执行日志和监控
+5. **限流和重试**: 添加 API 调用限流和重试机制
+6. **流式输出**: 支持实时的流式响应
+
+## 许可证
+
+MIT License
+
+## 相关链接
+
+- [LangChain 官方文档](https://python.langchain.com/)
+- [智谱 AI 开放平台](https://open.bigmodel.cn/)
+- [智谱 API 文档](https://open.bigmodel.cn/dev/api)
 2. **集成更多 LLM**: 支持其他大语言模型
 3. **持久化存储**: 将对话历史和结果保存到数据库
 4. **监控和日志**: 添加详细的执行日志和监控
