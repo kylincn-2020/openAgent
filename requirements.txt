@@ -1,0 +1,15 @@
+# LangChain >= 1.2.0
+langchain>=1.2.0
+langchain-core>=1.2.16
+langchain-openai>=1.1.10
+langgraph>=1.0.10
+
+# Web Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.0
+
+# Utils
+python-dotenv>=1.0.0
+pyyaml>=6.0
+loguru>=0.7.0
