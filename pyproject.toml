@@ -1,0 +1,13 @@
+[project]
+name = "devagent-mvp"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "pydantic>=2.7.0",
+  "langchain>=1.0.0",
+  "langgraph>=0.2.0",
+  "langchain-openai>=0.2.0",
+  "python-dotenv>=1.0.1"
+]
